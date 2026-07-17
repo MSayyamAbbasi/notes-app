@@ -6,16 +6,31 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores(['dist']),
+
   {
     files: ['**/*.{js,jsx}'],
+
     extends: [
       js.configs.recommended,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
     ],
+
     languageOptions: {
       globals: globals.browser,
-      parserOptions: { ecmaFeatures: { jsx: true } },
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+
+    rules: {
+      // Allow exporting hooks from context files
+      'react-refresh/only-export-components': 'off',
+
+      // Allow setState inside useEffect (common for edit forms)
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])
