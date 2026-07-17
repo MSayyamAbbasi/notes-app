@@ -28,14 +28,36 @@ const sequelize = new Sequelize(
 );
 
 export const connectDB = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('MySQL connected successfully.');
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('Database models synchronized.');
-  } catch (error) {
-    console.error('Unable to connect to MySQL:', error.message);
-    process.exit(1);
+  const maxRetries = 10;
+  const retryDelay = 5000;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Connecting to MySQL... (Attempt ${attempt}/${maxRetries})`);
+
+      await sequelize.authenticate();
+
+      console.log("✅ MySQL connected successfully.");
+
+      await sequelize.sync({
+        alter: process.env.NODE_ENV === "development",
+      });
+
+      console.log("✅ Database models synchronized.");
+
+      return;
+    } catch (error) {
+      console.log(`❌ Connection failed: ${error.message}`);
+
+      if (attempt === maxRetries) {
+        console.error("Maximum retry attempts reached.");
+        process.exit(1);
+      }
+
+      console.log(`Retrying in ${retryDelay / 1000} seconds...\n`);
+
+      await new Promise(resolve => setTimeout(resolve, retryDelay));
+    }
   }
 };
 
